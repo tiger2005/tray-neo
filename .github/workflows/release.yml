@@ -4,6 +4,9 @@ on:
   release:
     types: [created]
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: windows-latest
@@ -24,22 +27,36 @@ jobs:
           set "REPO_ROOT=%CD%"
           msbuild src\TrayNeo.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:SolutionDir="%REPO_ROOT%\\" /m /v:minimal
 
-      - name: Collect artifacts
-        shell: cmd
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: TrayNeo-${{ matrix.platform }}
+          path: |
+            Bin\**\plugins\TrayNeo.dll
+            Bin\**\plugins\TrayNeo.pdb
+
+  release:
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Prepare release files
         run: |
-          if "${{ matrix.platform }}"=="Win32" (
-            copy Bin\Release\plugins\TrayNeo.dll TrayNeo-Win32.dll
-            copy Bin\Release\plugins\TrayNeo.pdb TrayNeo-Win32.pdb
-          ) else (
-            copy Bin\x64\Release\plugins\TrayNeo.dll TrayNeo-x64.dll
-            copy Bin\x64\Release\plugins\TrayNeo.pdb TrayNeo-x64.pdb
-          )
+          mkdir -p release
+          cp artifacts/TrayNeo-Win32/TrayNeo.dll release/TrayNeo-Win32.dll
+          cp artifacts/TrayNeo-Win32/TrayNeo.pdb release/TrayNeo-Win32.pdb
+          cp artifacts/TrayNeo-x64/TrayNeo.dll release/TrayNeo-x64.dll
+          cp artifacts/TrayNeo-x64/TrayNeo.pdb release/TrayNeo-x64.pdb
 
       - name: Upload to release
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            TrayNeo-Win32.dll
-            TrayNeo-Win32.pdb
-            TrayNeo-x64.dll
-            TrayNeo-x64.pdb
+            release/TrayNeo-Win32.dll
+            release/TrayNeo-Win32.pdb
+            release/TrayNeo-x64.dll
+            release/TrayNeo-x64.pdb
