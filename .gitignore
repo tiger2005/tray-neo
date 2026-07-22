@@ -1,0 +1,11 @@
+Bin/
+build/
+.cache/
+*.user
+*.suo
+*.userprefs
+*.VC.db
+*.opendb
+*.sdf
+*.opensdf
+.vs/

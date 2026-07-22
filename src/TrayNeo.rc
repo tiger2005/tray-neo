@@ -1,0 +1,275 @@
+// Microsoft Visual C++ generated resource script.
+//
+#include "resource.h"
+
+#define APSTUDIO_READONLY_SYMBOLS
+///////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 2 resource.
+//
+#include "winres.h"
+
+///////////////////////////////////////////////////////////////////////////////
+#undef APSTUDIO_READONLY_SYMBOLS
+
+///////////////////////////////////////////////////////////////////////////////
+// 中文(简体，中国) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_CHS)
+LANGUAGE LANG_CHINESE, SUBLANG_CHINESE_SIMPLIFIED
+#pragma code_page(65001)
+
+#ifdef APSTUDIO_INVOKED
+///////////////////////////////////////////////////////////////////////////////
+//
+// TEXTINCLUDE
+//
+
+1 TEXTINCLUDE
+BEGIN
+    "resource.h\0"
+END
+
+2 TEXTINCLUDE
+BEGIN
+    "#include ""winres.h""\r\n"
+    "\0"
+END
+
+3 TEXTINCLUDE
+BEGIN
+    "\r\n"
+    "\0"
+END
+
+#endif    // APSTUDIO_INVOKED
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Font (RT_FONT = 8)，嵌入 Geist Mono 字体
+//
+
+IDR_FONT_GEIST_LIGHT    8  "../assets/GeistMono-Light.otf"
+IDR_FONT_GEIST_REGULAR  8  "../assets/GeistMono-Regular.otf"
+IDR_FONT_GEIST_MEDIUM   8  "../assets/GeistMono-Medium.otf"
+IDR_FONT_GEIST_BOLD     8  "../assets/GeistMono-Bold.otf"
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPTIONS_DIALOG DIALOGEX 0, 0, 210, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tray Neo 设置"
+FONT 9, "微软雅黑", 400, 0, 0x0
+BEGIN
+    GROUPBOX        "历史图表",IDC_STATIC,7,7,196,30
+    LTEXT           "记录时长",IDC_STATIC,15,23,40,10
+    COMBOBOX        IDC_HISTORY_DURATION_COMBO,60,21,130,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "阈值设置",IDC_STATIC,7,42,196,112
+    LTEXT           "警告",IDC_STATIC,80,56,30,8
+    LTEXT           "严重",IDC_STATIC,135,56,30,8
+    LTEXT           "CPU",IDC_STATIC,15,70,45,10
+    EDITTEXT        IDC_THR_CPU_WARN,80,68,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_CPU_CRIT,135,68,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "GPU",IDC_STATIC,15,84,45,10
+    EDITTEXT        IDC_THR_GPU_WARN,80,82,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_GPU_CRIT,135,82,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "MEM",IDC_STATIC,15,98,45,10
+    EDITTEXT        IDC_THR_MEM_WARN,80,96,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_MEM_CRIT,135,96,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "HDD",IDC_STATIC,15,112,45,10
+    EDITTEXT        IDC_THR_HDD_WARN,80,110,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_HDD_CRIT,135,110,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "NET↓ (MB/s)",IDC_STATIC,15,126,55,10
+    EDITTEXT        IDC_THR_NETD_WARN,80,124,40,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THR_NETD_CRIT,135,124,40,12,ES_AUTOHSCROLL
+    LTEXT           "NET↑ (MB/s)",IDC_STATIC,15,140,55,10
+    EDITTEXT        IDC_THR_NETU_WARN,80,138,40,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THR_NETU_CRIT,135,138,40,12,ES_AUTOHSCROLL
+    CONTROL         "将 100% 替换为 MAX",IDC_REPLACE_MAX_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,162,130,10
+    CONTROL         "联动显示所有数值",IDC_LINKED_TOOLTIP_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,176,130,10
+    DEFPUSHBUTTON   "确定",IDOK,70,193,50,14
+    PUSHBUTTON      "取消",IDCANCEL,128,193,50,14
+END
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_OPTIONS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 207
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_OPTIONS_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Version
+//
+
+VS_VERSION_INFO VERSIONINFO
+ FILEVERSION 0,1,0,0
+ PRODUCTVERSION 0,1,0,0
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x1L
+#else
+ FILEFLAGS 0x0L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x2L
+ FILESUBTYPE 0x0L
+BEGIN
+    BLOCK "StringFileInfo"
+    BEGIN
+        BLOCK "080404b0"
+        BEGIN
+            VALUE "CompanyName", "tiger2005"
+            VALUE "FileDescription", "Tray Neo for TrafficMonitor"
+            VALUE "FileVersion", "0.1.0.0"
+            VALUE "InternalName", "TrayNeo.dll"
+            VALUE "LegalCopyright", "Copyright (C) 2026 tiger2005"
+            VALUE "OriginalFilename", "TrayNeo.dll"
+            VALUE "ProductName", "Tray Neo for TrafficMonitor"
+            VALUE "ProductVersion", "0.1.0.0"
+        END
+    END
+    BLOCK "VarFileInfo"
+    BEGIN
+        VALUE "Translation", 0x804, 1200
+    END
+END
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PLUGIN_NAME         "Tray Neo"
+    IDS_PLUGIN_DESCRIPTION  "Tray Neo - TrafficMonitor 插件，用于显示系统实时指标及历史图表。"
+END
+
+#endif    // 中文(简体，中国) resources
+///////////////////////////////////////////////////////////////////////////////
+
+
+///////////////////////////////////////////////////////////////////////////////
+// English (United States) resources
+
+#if !defined(AFX_RESOURCE_DLL) || defined(AFX_TARG_ENU)
+LANGUAGE LANG_ENGLISH, SUBLANG_ENGLISH_US
+#pragma code_page(65001)
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// Dialog
+//
+
+IDD_OPTIONS_DIALOG DIALOGEX 0, 0, 210, 215
+STYLE DS_SETFONT | DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Tray Neo Settings"
+FONT 9, "Segoe UI", 400, 0, 0x0
+BEGIN
+    GROUPBOX        "History Chart",IDC_STATIC,7,7,196,30
+    LTEXT           "Record duration",IDC_STATIC,15,23,60,10
+    COMBOBOX        IDC_HISTORY_DURATION_COMBO,80,21,110,80,CBS_DROPDOWNLIST | WS_VSCROLL | WS_TABSTOP
+    GROUPBOX        "Thresholds",IDC_STATIC,7,42,196,112
+    LTEXT           "Warn",IDC_STATIC,80,56,30,8
+    LTEXT           "Critical",IDC_STATIC,130,56,40,8
+    LTEXT           "CPU",IDC_STATIC,15,70,45,10
+    EDITTEXT        IDC_THR_CPU_WARN,80,68,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_CPU_CRIT,135,68,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "GPU",IDC_STATIC,15,84,45,10
+    EDITTEXT        IDC_THR_GPU_WARN,80,82,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_GPU_CRIT,135,82,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "MEM",IDC_STATIC,15,98,45,10
+    EDITTEXT        IDC_THR_MEM_WARN,80,96,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_MEM_CRIT,135,96,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "HDD",IDC_STATIC,15,112,45,10
+    EDITTEXT        IDC_THR_HDD_WARN,80,110,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    EDITTEXT        IDC_THR_HDD_CRIT,135,110,40,12,ES_AUTOHSCROLL | ES_NUMBER
+    LTEXT           "NET↓ (MB/s)",IDC_STATIC,15,126,55,10
+    EDITTEXT        IDC_THR_NETD_WARN,80,124,40,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THR_NETD_CRIT,135,124,40,12,ES_AUTOHSCROLL
+    LTEXT           "NET↑ (MB/s)",IDC_STATIC,15,140,55,10
+    EDITTEXT        IDC_THR_NETU_WARN,80,138,40,12,ES_AUTOHSCROLL
+    EDITTEXT        IDC_THR_NETU_CRIT,135,138,40,12,ES_AUTOHSCROLL
+    CONTROL         "Replace 100% with MAX",IDC_REPLACE_MAX_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,162,130,10
+    CONTROL         "Show all metrics linked",IDC_LINKED_TOOLTIP_CHECK,"Button",BS_AUTOCHECKBOX | WS_TABSTOP,15,176,130,10
+    DEFPUSHBUTTON   "OK",IDOK,70,193,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,128,193,50,14
+END
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// DESIGNINFO
+//
+
+#ifdef APSTUDIO_INVOKED
+GUIDELINES DESIGNINFO
+BEGIN
+    IDD_OPTIONS_DIALOG, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 203
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 207
+    END
+END
+#endif    // APSTUDIO_INVOKED
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// AFX_DIALOG_LAYOUT
+//
+
+IDD_OPTIONS_DIALOG AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+///////////////////////////////////////////////////////////////////////////////
+//
+// String Table
+//
+
+STRINGTABLE
+BEGIN
+    IDS_PLUGIN_NAME         "Tray Neo"
+    IDS_PLUGIN_DESCRIPTION  "Tray Neo - A TrafficMonitor plugin for real-time system monitoring with historical charts."
+END
+
+#endif    // English (United States) resources
+///////////////////////////////////////////////////////////////////////////////
+
+
+#ifndef APSTUDIO_INVOKED
+///////////////////////////////////////////////////////////////////////////////
+//
+// Generated from the TEXTINCLUDE 3 resource.
+//
+
+///////////////////////////////////////////////////////////////////////////////
+#endif    // not APSTUDIO_INVOKED

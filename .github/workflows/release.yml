@@ -1,0 +1,45 @@
+name: Build Release DLL
+
+on:
+  release:
+    types: [created]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    strategy:
+      matrix:
+        platform: [Win32, x64]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup MSBuild
+        uses: microsoft/setup-msbuild@v2
+
+      - name: Build
+        shell: cmd
+        run: |
+          set "REPO_ROOT=%CD%"
+          msbuild src\TrayNeo.vcxproj /t:Rebuild /p:Configuration=Release /p:Platform=${{ matrix.platform }} /p:SolutionDir="%REPO_ROOT%\\" /m /v:minimal
+
+      - name: Collect artifacts
+        shell: cmd
+        run: |
+          if "${{ matrix.platform }}"=="Win32" (
+            copy Bin\Release\plugins\TrayNeo.dll TrayNeo-Win32.dll
+            copy Bin\Release\plugins\TrayNeo.pdb TrayNeo-Win32.pdb
+          ) else (
+            copy Bin\x64\Release\plugins\TrayNeo.dll TrayNeo-x64.dll
+            copy Bin\x64\Release\plugins\TrayNeo.pdb TrayNeo-x64.pdb
+          )
+
+      - name: Upload to release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            TrayNeo-Win32.dll
+            TrayNeo-Win32.pdb
+            TrayNeo-x64.dll
+            TrayNeo-x64.pdb
