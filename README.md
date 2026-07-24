@@ -1,5 +1,7 @@
 # Tray Neo
 
+[中文说明](README.zh-CN.md)
+
 A modern TrafficMonitor plugin that displays real-time system metrics in the taskbar tray area and provides an interactive history chart popup.
 
 ![Preview](docs/screenshot.png)

@@ -1,5 +1,7 @@
 # Tray Neo
 
+[English](README.md)
+
 一个现代化的 TrafficMonitor 插件，在任务栏托盘区域显示实时系统指标，并提供交互式历史图表弹窗。
 
 ![预览](docs/screenshot.png)
