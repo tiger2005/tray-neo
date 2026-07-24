@@ -8,8 +8,10 @@ A modern TrafficMonitor plugin that displays real-time system metrics in the tas
 
 - **Real-time monitoring**: CPU, GPU, Memory, HDD, Network (upload/download)
 - **Interactive history chart**: Hover to see exact values at specific points in time
-- **Smart tooltip**: Shows per-metric colored values with timestamp
-- **Dark/light mode**: Automatically adapts to TrafficMonitor theme
+- **Smart tooltip**: Three adaptive styles (small, medium, linked), defaults to the left of the cursor
+- **Geist UI color scheme**: Light/dark themes based on the Vercel Geist design system
+- **Gradient borders**: Each chart's rounded border uses the metric's accent color, fading from top to transparent
+- **Smart downsampling**: When history exceeds 2.5 minutes, uses LTTB algorithm to downsample to 150 points, preserving peaks and valleys
 - **Customizable thresholds**: Configure warning/critical levels for each metric
 - **Toggle display**: Click to show/hide the history chart
 
@@ -27,9 +29,11 @@ Right-click the plugin area and select "Tray Neo Settings":
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| History Duration | How long to keep history data | 2 minutes |
-| Replace MAX with value | Show actual value instead of "MAX" when at 100% | Off |
-| Linked Tooltip | Show all metrics when hovering any chart | Off |
+| History Duration | How long to keep history data (30 sec ~ 1 hour) | 2 minutes |
+| Replace MAX with value in taskbar | Show actual value instead of "MAX" when at 100% | Off |
+| Linked tooltip in chart | Show all metrics when hovering any chart | Off |
+
+> **Note**: When selecting 5 minutes or longer history duration, the chart is downsampled to 150 data points (LTTB algorithm), so chart accuracy is not guaranteed.
 
 ### Thresholds
 
@@ -88,4 +92,4 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 ## Acknowledgments
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - The monitoring framework
-- [Geist Mono](https://github.com/arrowtype/Geist) - Font used in the plugin
+- [Geist Mono](https://vercel.com/font) - Font used in the plugin
