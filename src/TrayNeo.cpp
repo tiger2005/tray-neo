@@ -71,7 +71,7 @@ const wchar_t* CTrayNeo::GetInfo(PluginInfoIndex index)
     case TMI_VERSION:
         return L"0.2.0";
     case ITMPlugin::TMI_URL:
-        return L"";
+        return L"https://github.com/tiger2005/tray-neo";
     default:
         break;
     }
