@@ -66,6 +66,16 @@ private:
     int m_history_capacity;
     int m_history_count;
     int m_history_index;
+
+    // 增量式降采样：当历史超过 150 秒时启用
+    static const int DISPLAY_BUFFER_SIZE = 150;
+    std::vector<double> m_display[6];     // 显示用循环队列（每组代表值）
+    int m_display_index{ 0 };             // 写入位置
+    int m_display_count{ 0 };             //有效数量
+    std::vector<double> m_collect[6];     // 当前组的收集缓冲区
+    int m_tick_size{ 1 };                 // 每组采样数
+    bool m_use_downsample{ false };       // 是否启用增量降采样
+    double m_latest_sample[6]{};          // 最近一次原始采样值
     UINT_PTR m_timer_id;
     DestroyCallback m_destroy_callback{ nullptr };
     CPoint m_mouse_pos;
@@ -85,6 +95,8 @@ private:
     COLORREF GetBgColor() const;
     COLORREF GetTextColor() const;
     COLORREF GetSubtleColor() const;
+    COLORREF GetTooltipBgColor() const;
+    COLORREF GetTooltipBorderColor() const;
 
     // 绘制单个图表（主series + 可选副series，用于NET上下行合并）
     void DrawChart(Gdiplus::Graphics* graphics, CDC* pDC, const Series& series,
@@ -104,6 +116,12 @@ private:
 
     // 更新序列数据（从历史缓冲区构建）
     void UpdateSeriesValues();
+
+    // 从一组数据中选择代表性值（LTTB：最大化三角形面积，保留视觉特征）
+    double SelectRepresentative(const std::vector<double>& group, double prev_selected, double next_avg) const;
+
+    // 从有序原始数据初始化显示缓冲区
+    void InitDisplayBuffer(const std::vector<double> ordered_data[6]);
 
     // 检测窗口是否是任务栏或其子窗口
     BOOL IsTaskbarWindow(HWND hWnd) const;

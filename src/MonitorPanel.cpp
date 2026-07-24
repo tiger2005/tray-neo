@@ -9,7 +9,7 @@
 void CMonitorPanel::HistoryBuffer::set_capacity(int cap)
 {
     if (cap <= 0) cap = 30;
-    if (cap > 600) cap = 600;
+    if (cap > 3600) cap = 3600;
     capacity = cap;
     data.assign(capacity, 0.0);
     count = 0;

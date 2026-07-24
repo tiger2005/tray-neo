@@ -36,8 +36,8 @@ void CDataManager::LoadConfig(const std::wstring& config_dir)
     m_setting_data.history_seconds = GetPrivateProfileInt(_T("config"), _T("history_seconds"), 120, m_config_path.c_str());
     if (m_setting_data.history_seconds < 30)
         m_setting_data.history_seconds = 30;
-    if (m_setting_data.history_seconds > 600)
-        m_setting_data.history_seconds = 600;
+    if (m_setting_data.history_seconds > 3600)
+        m_setting_data.history_seconds = 3600;
 
     static const wchar_t* kNames[] = { L"cpu", L"gpu", L"mem", L"hdd", L"net_down", L"net_up" };
     static const wchar_t* kDefWarn[] = { L"70", L"70", L"80", L"80", L"1", L"1" };

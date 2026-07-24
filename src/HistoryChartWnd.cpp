@@ -1,6 +1,7 @@
 #include "pch.h"
 #include "HistoryChartWnd.h"
 #include <algorithm>
+#include <cmath>
 #include <ctime>
 #include <gdiplus.h>
 #pragma comment(lib, "gdiplus.lib")
@@ -65,7 +66,7 @@ void CHistoryChartWnd::SetData(const std::vector<double>& cpu,
     int max_input = (std::max)({ (int)cpu.size(), (int)gpu.size(), (int)mem.size(),
                                  (int)hdd.size(), (int)net_down.size(), (int)net_up.size() });
     m_history_capacity = (std::max)(max_input, 30);
-    if (m_history_capacity > 600) m_history_capacity = 600;
+    if (m_history_capacity > 3600) m_history_capacity = 3600;
 
     // 初始化 6 个系列的环形缓冲区
     m_history.assign(6, std::vector<double>(m_history_capacity, 0.0));
@@ -86,48 +87,77 @@ void CHistoryChartWnd::SetData(const std::vector<double>& cpu,
     }
     m_history_index = 0;   // 下一个写入位置从 0 开始（最旧的位置）
 
+    // 初始化增量降采样
+    m_use_downsample = (m_history_capacity > DISPLAY_BUFFER_SIZE);
+    m_display_index = 0;
+    m_display_count = 0;
+    for (int s = 0; s < 6; s++)
+    {
+        m_display[s].assign(DISPLAY_BUFFER_SIZE, 0.0);
+        m_collect[s].clear();
+    }
+    if (m_use_downsample)
+    {
+        m_tick_size = (m_history_capacity + DISPLAY_BUFFER_SIZE - 1) / DISPLAY_BUFFER_SIZE;
+        // 构建有序数据并初始化显示缓冲区
+        std::vector<double> ordered[6];
+        for (int s = 0; s < 6; s++)
+        {
+            ordered[s].reserve(m_history_count);
+            for (int i = 0; i < m_history_count; i++)
+            {
+                int idx = (m_history_index - m_history_count + i + m_history_capacity) % m_history_capacity;
+                ordered[s].push_back(m_history[s][idx]);
+            }
+        }
+        InitDisplayBuffer(ordered);
+        // 记录最新采样值
+        for (int s = 0; s < 6; s++)
+            m_latest_sample[s] = ordered[s].back();
+    }
+
     m_series.clear();
     m_series.resize(6);
     if (dark_mode)
     {
         m_series[0].label = L"CPU";
-        m_series[0].color = RGB(0, 122, 255);
+        m_series[0].color = RGB(66, 133, 244);
         m_series[0].is_percent = true;
         m_series[1].label = L"GPU";
-        m_series[1].color = RGB(255, 55, 95);
+        m_series[1].color = RGB(239, 83, 80);
         m_series[1].is_percent = true;
         m_series[2].label = L"MEM";
-        m_series[2].color = RGB(255, 149, 0);
+        m_series[2].color = RGB(255, 152, 0);
         m_series[2].is_percent = true;
         m_series[3].label = L"HDD";
-        m_series[3].color = RGB(52, 199, 89);
+        m_series[3].color = RGB(76, 175, 80);
         m_series[3].is_percent = true;
         m_series[4].label = L"NET↓";
-        m_series[4].color = RGB(175, 82, 222);
+        m_series[4].color = RGB(156, 39, 176);
         m_series[4].is_percent = false;
         m_series[5].label = L"NET↑";
-        m_series[5].color = RGB(0, 199, 190);
+        m_series[5].color = RGB(0, 150, 136);
         m_series[5].is_percent = false;
     }
     else
     {
         m_series[0].label = L"CPU";
-        m_series[0].color = RGB(0, 110, 240);
+        m_series[0].color = RGB(59, 105, 228);
         m_series[0].is_percent = true;
         m_series[1].label = L"GPU";
-        m_series[1].color = RGB(240, 45, 85);
+        m_series[1].color = RGB(236, 64, 122);
         m_series[1].is_percent = true;
         m_series[2].label = L"MEM";
-        m_series[2].color = RGB(255, 130, 0);
+        m_series[2].color = RGB(245, 158, 11);
         m_series[2].is_percent = true;
         m_series[3].label = L"HDD";
-        m_series[3].color = RGB(30, 150, 60);
+        m_series[3].color = RGB(34, 197, 94);
         m_series[3].is_percent = true;
         m_series[4].label = L"NET↓";
-        m_series[4].color = RGB(130, 50, 170);
+        m_series[4].color = RGB(168, 85, 247);
         m_series[4].is_percent = false;
         m_series[5].label = L"NET↑";
-        m_series[5].color = RGB(0, 175, 165);
+        m_series[5].color = RGB(20, 184, 166);
         m_series[5].is_percent = false;
     }
 
@@ -142,11 +172,138 @@ void CHistoryChartWnd::UpdateSeriesValues()
     for (int s = 0; s < 6; s++)
     {
         m_series[s].values.clear();
-        m_series[s].values.reserve(m_history_count);
-        for (int i = 0; i < m_history_count; i++)
+
+        if (m_use_downsample)
         {
-            int idx = (m_history_index - m_history_count + i + m_history_capacity) % m_history_capacity;
-            m_series[s].values.push_back(m_history[s][idx]);
+            // 从显示循环队列读取已完成组的代表值
+            m_series[s].values.reserve(m_display_count + 1);
+            for (int i = 0; i < m_display_count; i++)
+            {
+                int idx = (m_display_index - m_display_count + i + DISPLAY_BUFFER_SIZE) % DISPLAY_BUFFER_SIZE;
+                m_series[s].values.push_back(m_display[s][idx]);
+            }
+            // 最后一个点总是显示最近收集的数据
+            m_series[s].values.push_back(m_latest_sample[s]);
+        }
+        else
+        {
+            // 数据量不超过 150，直接使用原始数据
+            m_series[s].values.reserve(m_history_count);
+            for (int i = 0; i < m_history_count; i++)
+            {
+                int idx = (m_history_index - m_history_count + i + m_history_capacity) % m_history_capacity;
+                m_series[s].values.push_back(m_history[s][idx]);
+            }
+        }
+    }
+}
+
+double CHistoryChartWnd::SelectRepresentative(const std::vector<double>& group, double prev_selected, double next_avg) const
+{
+    if (group.empty()) return 0.0;
+    if (group.size() == 1) return group[0];
+
+    int n = static_cast<int>(group.size());
+    double best_area = -1.0;
+    double best_value = group[0];
+
+    // LTTB: 对组内每个候选点，计算与"前一个已选点"和"下一组平均"构成的三角形面积
+    // x 坐标均匀分布：prev 在 x=-1，候选点在 x=i，next 在 x=n
+    for (int i = 0; i < n; i++)
+    {
+        double prev_x = -1.0, prev_y = prev_selected;
+        double cand_x = static_cast<double>(i), cand_y = group[i];
+        double next_x = static_cast<double>(n), next_y = next_avg;
+
+        // 三角形面积 = |x1(y2-y3) + x2(y3-y1) + x3(y1-y2)| / 2
+        double area = std::abs(
+            prev_x * (cand_y - next_y) +
+            cand_x * (next_y - prev_y) +
+            next_x * (prev_y - cand_y)) / 2.0;
+
+        if (area > best_area)
+        {
+            best_area = area;
+            best_value = group[i];
+        }
+    }
+
+    return best_value;
+}
+
+void CHistoryChartWnd::InitDisplayBuffer(const std::vector<double> ordered_data[6])
+{
+    int total = static_cast<int>(ordered_data[0].size());
+    if (total == 0) return;
+
+    int num_complete = total / m_tick_size;
+    int remainder = total % m_tick_size;
+
+    // 预计算每组的平均值（用于 LTTB 的 next_avg）
+    std::vector<double> bucket_avg[6];
+    int num_buckets = num_complete + (remainder > 0 ? 1 : 0);
+    for (int s = 0; s < 6; s++)
+    {
+        bucket_avg[s].resize(num_buckets);
+        for (int b = 0; b < num_complete; b++)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < m_tick_size; i++)
+                sum += ordered_data[s][b * m_tick_size + i];
+            bucket_avg[s][b] = sum / m_tick_size;
+        }
+        if (remainder > 0)
+        {
+            double sum = 0.0;
+            for (int i = 0; i < remainder; i++)
+                sum += ordered_data[s][num_complete * m_tick_size + i];
+            bucket_avg[s][num_complete] = sum / remainder;
+        }
+    }
+
+    // 前一个已选值，初始化为第一个数据点
+    double prev_selected[6];
+    for (int s = 0; s < 6; s++)
+        prev_selected[s] = ordered_data[s][0];
+
+    // 逐组处理，使用 LTTB 选择代表值
+    for (int b = 0; b < num_complete; b++)
+    {
+        // 下一组的平均值（最后一组用自身平均值）
+        double next_avg[6];
+        if (b + 1 < num_buckets)
+        {
+            for (int s = 0; s < 6; s++)
+                next_avg[s] = bucket_avg[s][b + 1];
+        }
+        else
+        {
+            for (int s = 0; s < 6; s++)
+                next_avg[s] = bucket_avg[s][b];
+        }
+
+        for (int s = 0; s < 6; s++)
+        {
+            std::vector<double> group(
+                ordered_data[s].begin() + b * m_tick_size,
+                ordered_data[s].begin() + (b + 1) * m_tick_size);
+            double rep = SelectRepresentative(group, prev_selected[s], next_avg[s]);
+            m_display[s][m_display_index] = rep;
+            prev_selected[s] = rep;
+        }
+        m_display_index = (m_display_index + 1) % DISPLAY_BUFFER_SIZE;
+        if (m_display_count < DISPLAY_BUFFER_SIZE)
+            m_display_count++;
+    }
+
+    // 不完整的末尾组放入收集缓冲区
+    if (remainder > 0)
+    {
+        for (int s = 0; s < 6; s++)
+        {
+            m_collect[s].assign(
+                ordered_data[s].begin() + num_complete * m_tick_size,
+                ordered_data[s].end());
         }
     }
 }
@@ -154,7 +311,7 @@ void CHistoryChartWnd::UpdateSeriesValues()
 bool CHistoryChartWnd::CreatePopup(HWND hTaskbar, int plugin_center_x, CWnd* pParent)
 {
     int w = Scale(380);
-    int h = Scale(420);
+    int h = Scale(445);
 
     // 获取任务栏窗口矩形，确定上边沿
     CRect taskbar_rect;
@@ -248,6 +405,8 @@ void CHistoryChartWnd::OnTimer(UINT_PTR nIDEvent)
             m_app->GetMonitorValue(ITrafficMonitor::MI_DOWN),
             m_app->GetMonitorValue(ITrafficMonitor::MI_UP),
         };
+
+        // 写入历史环形缓冲区
         for (int s = 0; s < 6; s++)
         {
             m_history[s][m_history_index] = vals[s];
@@ -256,6 +415,39 @@ void CHistoryChartWnd::OnTimer(UINT_PTR nIDEvent)
         if (m_history_count < m_history_capacity)
             m_history_count++;
         m_last_sample_time = time(nullptr);
+
+        // 增量降采样：收集到 tick_size 后选代表值压入显示队列
+        if (m_use_downsample)
+        {
+            for (int s = 0; s < 6; s++)
+            {
+                m_collect[s].push_back(vals[s]);
+                m_latest_sample[s] = vals[s];
+            }
+            if (static_cast<int>(m_collect[0].size()) >= m_tick_size)
+            {
+                for (int s = 0; s < 6; s++)
+                {
+                    // 计算当前组平均值作为 next_avg 代理
+                    double sum = 0.0;
+                    for (double v : m_collect[s]) sum += v;
+                    double avg = sum / m_collect[s].size();
+
+                    // 前一个已选值
+                    double prev = (m_display_count > 0)
+                        ? m_display[s][(m_display_index - 1 + DISPLAY_BUFFER_SIZE) % DISPLAY_BUFFER_SIZE]
+                        : m_collect[s][0];
+
+                    double rep = SelectRepresentative(m_collect[s], prev, avg);
+                    m_display[s][m_display_index] = rep;
+                }
+                m_display_index = (m_display_index + 1) % DISPLAY_BUFFER_SIZE;
+                if (m_display_count < DISPLAY_BUFFER_SIZE)
+                    m_display_count++;
+                for (int s = 0; s < 6; s++)
+                    m_collect[s].clear();
+            }
+        }
 
         UpdateSeriesValues();
         Invalidate(FALSE);
@@ -281,7 +473,7 @@ void CHistoryChartWnd::OnMouseMove(UINT nFlags, CPoint point)
     int pad = Scale(10);
     int gap = Scale(12);
     int chartW = Scale(380) - 2 * pad;
-    int chartH = (Scale(420) - 2 * pad - 4 * gap) / 5;
+    int chartH = (Scale(445) - 2 * pad - 4 * gap) / 5;
 
     for (int i = 0; i < 5; i++)
     {
@@ -292,7 +484,7 @@ void CHistoryChartWnd::OnMouseMove(UINT nFlags, CPoint point)
             int labelHeight = Scale(16);
             int padL = Scale(8);
             int padR = Scale(8);
-            int padT = Scale(8);
+            int padT = Scale(10);
             CRect plotRect(chartRect.left + padL, chartRect.top + labelHeight + padT,
                            chartRect.right - padR, chartRect.bottom - padT);
 
@@ -369,17 +561,27 @@ COLORREF CHistoryChartWnd::LerpColor(COLORREF c1, COLORREF c2, float t)
 
 COLORREF CHistoryChartWnd::GetBgColor() const
 {
-    return m_dark_mode ? RGB(28, 28, 30) : RGB(246, 246, 246);
+    return m_dark_mode ? RGB(7, 7, 7) : RGB(255, 255, 255);
 }
 
 COLORREF CHistoryChartWnd::GetTextColor() const
 {
-    return m_dark_mode ? RGB(220, 220, 220) : RGB(60, 60, 60);
+    return m_dark_mode ? RGB(240, 240, 240) : RGB(52, 52, 52);
 }
 
 COLORREF CHistoryChartWnd::GetSubtleColor() const
 {
-    return m_dark_mode ? RGB(255, 255, 255) : RGB(0, 0, 0);
+    return m_dark_mode ? RGB(180, 180, 180) : RGB(107, 107, 107);
+}
+
+COLORREF CHistoryChartWnd::GetTooltipBgColor() const
+{
+    return m_dark_mode ? RGB(52, 52, 52) : RGB(255, 255, 255);
+}
+
+COLORREF CHistoryChartWnd::GetTooltipBorderColor() const
+{
+    return m_dark_mode ? RGB(25, 25, 25) : RGB(234, 234, 234);
 }
 
 // ── 绘制 ──
@@ -460,7 +662,7 @@ void CHistoryChartWnd::DrawChart(Gdiplus::Graphics* graphics, CDC* pDC, const Se
     int labelHeight = Scale(16);
     int padL = Scale(8);
     int padR = Scale(8);
-    int padT = Scale(8);
+    int padT = Scale(10);
     int padB = Scale(8);
 
     CRect plotRect(rect.left + padL, rect.top + labelHeight + padT,
@@ -523,8 +725,20 @@ void CHistoryChartWnd::DrawChart(Gdiplus::Graphics* graphics, CDC* pDC, const Se
     {
         double yVal = paddedMin + valRange * frac / 100.0;
         REAL y = yFor(yVal);
-        Pen guidePen(Color(15, GetRValue(subtleCr), GetGValue(subtleCr), GetBValue(subtleCr)), 0.5f);
+        Pen guidePen(Color(35, GetRValue(subtleCr), GetGValue(subtleCr), GetBValue(subtleCr)), 0.5f);
         graphics->DrawLine(&guidePen, static_cast<REAL>(plotRect.left), y, static_cast<REAL>(plotRect.right), y);
+    }
+
+    // 渐变边框：顶部使用 series 特色颜色，向下渐变到透明
+    {
+        // 两端各延伸笔触半径，避免 WrapModeClamp 导致顶部变窄
+        LinearGradientBrush borderGrad(
+            Point(rect.left, rect.top - Scale(2)),
+            Point(rect.left, rect.bottom + Scale(4)),
+            Color(180, GetRValue(lineCr), GetGValue(lineCr), GetBValue(lineCr)),
+            Color(0, GetRValue(lineCr), GetGValue(lineCr), GetBValue(lineCr)));
+        Pen borderPen(&borderGrad, 2.5f);
+        graphics->DrawPath(&borderPen, &bgPath);
     }
 
     BYTE aDot = m_dark_mode ? 30 : 25;
@@ -789,12 +1003,9 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
 {
     if (m_hover_index < 0) return;
 
-    COLORREF bgCr = m_dark_mode ? RGB(35, 35, 37) : RGB(255, 255, 255);
-    COLORREF borderCr = m_dark_mode ? RGB(60, 60, 60) : RGB(200, 200, 200);
+    COLORREF bgCr = GetTooltipBgColor();
+    COLORREF borderCr = GetTooltipBorderColor();
 
-    // 决定要显示哪些 series：
-    //   联动模式 -> 全部 6 个
-    //   独立模式 -> 仅当前悬停图表包含的 series（chart 0..3 单系列，chart 4 为 NET↓+NET↑）
     int series_to_show[6];
     int n_show = 0;
     if (m_linked_tooltip || m_hover_chart < 0)
@@ -811,8 +1022,6 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
         series_to_show[n_show++] = 5;
     }
 
-    // 时间表头：HH:MM:SS（无日期）
-    // 最新数据点对应 m_last_sample_time，悬停索引 i 距最新点 (count-1-i) 秒
     CString timeStr;
     int count = static_cast<int>(m_series[0].values.size());
     if (m_last_sample_time > 0 && count > 0)
@@ -868,7 +1077,6 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
 
     int padding = Scale(8);
     int lineHeight = Scale(16);
-    int header_gap = Scale(3);   // 时间表头下方的小间距
     bool has_header = !timeStr.IsEmpty();
     int total_lines = (has_header ? 1 : 0) + static_cast<int>(labels.size());
 
@@ -877,22 +1085,34 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
     font.CreateFont(fontHeight, 0, 0, 0, FW_REGULAR, FALSE, FALSE, FALSE,
         DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS,
         CLEARTYPE_QUALITY, DEFAULT_PITCH | FF_DONTCARE, _T("Geist Mono"));
+
     CFont* pOldFont = pDC->SelectObject(&font);
 
-    // 固定宽度：联动模式更宽以容纳所有指标
-    int tooltipW = m_linked_tooltip ? Scale(110) : Scale(100);
-    int tooltipH = total_lines * lineHeight + padding * 2 + (has_header ? header_gap : 0);
+    // 小型风格时间下方的间距更小
+    int header_gap = (m_linked_tooltip || m_hover_chart == 4) ? Scale(3) : Scale(1);
+    int header_lineH = m_linked_tooltip ? lineHeight : Scale(14);
 
-    int x = m_mouse_pos.x + Scale(12);
+    int tooltipW;
+    if (m_linked_tooltip)
+    {
+        tooltipW = Scale(120);
+    }
+    else
+    {
+        tooltipW = Scale(80);
+    }
+    int tooltipH = (has_header ? header_lineH : 0) + static_cast<int>(labels.size()) * lineHeight + padding * 2 + (has_header ? header_gap : 0);
+
+    int x = m_mouse_pos.x - tooltipW - Scale(12);
     int y = m_mouse_pos.y - tooltipH / 2;
 
     CRect clientRect;
     GetClientRect(&clientRect);
 
-    if (x + tooltipW > clientRect.right)
-        x = m_mouse_pos.x - tooltipW - Scale(12);
     if (x < 0)
-        x = 0;
+        x = m_mouse_pos.x + Scale(12);
+    if (x + tooltipW > clientRect.right)
+        x = clientRect.right - tooltipW;
     if (y < 0)
         y = 0;
     if (y + tooltipH > clientRect.bottom)
@@ -920,24 +1140,77 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
 
     int textY = y + padding;
 
-    // 时间表头（左对齐，使用弱化色）
-    if (has_header)
-    {
-        COLORREF headerCr = m_dark_mode ? RGB(170, 170, 170) : RGB(110, 110, 110);
-        pDC->SetTextColor(headerCr);
-        CRect textRect(x + padding, textY, x + tooltipW - padding, textY + lineHeight);
-        pDC->DrawText(timeStr, textRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
-        textY += lineHeight + header_gap;
-    }
+    COLORREF headerCr = m_dark_mode ? RGB(170, 170, 170) : RGB(140, 140, 140);
 
-    // 每个指标：标签左对齐，数值右对齐，使用各自颜色
-    for (size_t i = 0; i < labels.size(); i++)
+    if (m_linked_tooltip)
     {
-        pDC->SetTextColor(line_colors[i]);
-        CRect textRect(x + padding, textY, x + tooltipW - padding, textY + lineHeight);
-        pDC->DrawText(labels[i], textRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
-        pDC->DrawText(values[i], textRect, DT_RIGHT | DT_TOP | DT_SINGLELINE);
-        textY += lineHeight;
+        if (has_header)
+        {
+            pDC->SetTextColor(headerCr);
+            CRect textRect(x + padding, textY, x + tooltipW - padding, textY + header_lineH);
+            pDC->DrawText(timeStr, textRect, DT_CENTER | DT_TOP | DT_SINGLELINE);
+            textY += header_lineH + header_gap;
+        }
+
+        for (size_t i = 0; i < labels.size(); i++)
+        {
+            SolidBrush dotBrush(Color(255, GetRValue(line_colors[i]), GetGValue(line_colors[i]), GetBValue(line_colors[i])));
+            REAL dotX = static_cast<REAL>(x + padding);
+            REAL dotY = static_cast<REAL>(textY + lineHeight / 2 - Scale(2));
+            REAL dotW = static_cast<REAL>(Scale(4));
+            REAL dotH = static_cast<REAL>(Scale(4));
+            graphics->FillEllipse(&dotBrush, dotX, dotY, dotW, dotH);
+
+            pDC->SetTextColor(line_colors[i]);
+            CRect textRect(x + padding + Scale(10), textY, x + tooltipW - padding, textY + lineHeight);
+            pDC->DrawText(labels[i], textRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
+            pDC->DrawText(values[i], textRect, DT_RIGHT | DT_TOP | DT_SINGLELINE);
+            textY += lineHeight;
+        }
+    }
+    else if (m_hover_chart == 4)
+    {
+        if (has_header)
+        {
+            pDC->SetTextColor(headerCr);
+            CRect textRect(x + padding, textY, x + tooltipW - padding, textY + header_lineH);
+            pDC->DrawText(timeStr, textRect, DT_CENTER | DT_TOP | DT_SINGLELINE);
+            textY += header_lineH + header_gap;
+        }
+
+        for (size_t i = 0; i < labels.size(); i++)
+        {
+            pDC->SetTextColor(line_colors[i]);
+            CRect textRect(x + padding, textY, x + tooltipW - padding, textY + lineHeight);
+            CString displayLabel;
+            if (labels[i] == L"NET↓")
+                displayLabel = L"↓";
+            else if (labels[i] == L"NET↑")
+                displayLabel = L"↑";
+            else
+                displayLabel = labels[i];
+            pDC->DrawText(displayLabel, textRect, DT_LEFT | DT_TOP | DT_SINGLELINE);
+            pDC->DrawText(values[i], textRect, DT_RIGHT | DT_TOP | DT_SINGLELINE);
+            textY += lineHeight;
+        }
+    }
+    else
+    {
+        if (has_header)
+        {
+            pDC->SetTextColor(headerCr);
+            CRect textRect(x + padding, textY, x + tooltipW - padding, textY + header_lineH);
+            pDC->DrawText(timeStr, textRect, DT_CENTER | DT_TOP | DT_SINGLELINE);
+            textY += header_lineH + header_gap;
+        }
+
+        for (size_t i = 0; i < labels.size(); i++)
+        {
+            pDC->SetTextColor(line_colors[i]);
+            CRect textRect(x + padding, textY, x + tooltipW - padding, textY + lineHeight);
+            pDC->DrawText(values[i], textRect, DT_CENTER | DT_TOP | DT_SINGLELINE);
+            textY += lineHeight;
+        }
     }
 
     pDC->SelectObject(pOldFont);

@@ -46,6 +46,9 @@ static const DurationOption kDurationOptions[] = {
     { L"2 分钟", 120 },
     { L"5 分钟", 300 },
     { L"10 分钟", 600 },
+    { L"20 分钟", 1200 },
+    { L"30 分钟", 1800 },
+    { L"1 小时", 3600 },
 };
 
 static const int kDurationOptionCount = _countof(kDurationOptions);
