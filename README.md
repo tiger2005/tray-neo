@@ -1,99 +1,99 @@
 # Tray Neo
 
-[中文说明](README.zh-CN.md)
+[English](README.en-US.md)
 
-A modern TrafficMonitor plugin that displays real-time system metrics in the taskbar tray area and provides an interactive history chart popup.
+一个现代化的 TrafficMonitor 插件，在任务栏托盘区域显示实时系统指标，并提供交互式历史图表弹窗。
 
-![Preview](docs/screenshot.png)
+![预览](docs/screenshot.png)
 
-## Features
+## 特性
 
-- **Real-time monitoring**: CPU, GPU, Memory, HDD, Network (upload/download)
-- **Interactive history chart**: Hover to see exact values at specific points in time
-- **Smart tooltip**: Three adaptive styles (small, medium, linked), defaults to the left of the cursor
-- **Geist UI color scheme**: Light/dark themes based on the Vercel Geist design system
-- **Gradient borders**: Each chart's rounded border uses the metric's accent color, fading from top to transparent
-- **Smart downsampling**: When history exceeds 2.5 minutes, uses LTTB algorithm to downsample to 150 points, preserving peaks and valleys
-- **Customizable thresholds**: Configure warning/critical levels for each metric
-- **Toggle display**: Click to show/hide the history chart
+- **实时监控**：CPU、GPU、内存、硬盘、网络（上传/下载）
+- **交互式历史图表**：鼠标悬停查看特定时间点的精确数值
+- **智能提示框**：三种风格自适应（小型、中型、联动），默认显示在鼠标左侧
+- **Geist UI 配色**：基于 Vercel Geist 设计系统的亮色/暗色主题
+- **渐变边框**：每个图表的圆角边框使用指标特色色，从顶部向下渐变到透明
+- **智能降采样**：历史时长超过 2.5 分钟时，使用 LTTB 算法降采样至 150 个点，保留峰谷特征
+- **可配置阈值**：为每个指标配置警告/临界级别
+- **切换显示**：点击插件区域显示/隐藏历史图表
 
-## Installation
+## 安装
 
-1. Download the latest release from [Releases](https://github.com/tiger2005/tray-neo/releases)
-2. Extract `TrayNeo.dll` to your TrafficMonitor plugins directory:
-   - Usually `TrafficMonitor\plugins\`
-3. Restart TrafficMonitor
-4. Enable the plugin in TrafficMonitor settings
+1. 从 [Releases](https://github.com/tiger2005/tray-neo/releases) 下载最新版本
+2. 将 `TrayNeo.dll` 解压到 TrafficMonitor 插件目录：
+   - 通常是 `TrafficMonitor\plugins\`
+3. 重启 TrafficMonitor
+4. 在 TrafficMonitor 设置中启用插件
 
-## Configuration
+## 配置
 
-Right-click the plugin area and select "Tray Neo Settings":
+右键点击插件区域，选择"托盘 Neo 设置"：
 
-| Setting | Description | Default |
-|---------|-------------|---------|
-| History Duration | How long to keep history data (30 sec ~ 1 hour) | 2 minutes |
-| Replace MAX with value in taskbar | Show actual value instead of "MAX" when at 100% | Off |
-| Linked tooltip in chart | Show all metrics when hovering any chart | Off |
+| 设置项 | 说明 | 默认值 |
+|--------|------|--------|
+| 历史时长 | 保留历史数据的时间长度（30 秒 ~ 1 小时） | 2 分钟 |
+| 任务栏中替换 MAX 为数值 | 达到 100% 时显示实际值而非"MAX" | 关闭 |
+| 图表中联动显示数值 | 悬停任意图表时显示所有指标 | 关闭 |
 
-> **Note**: When selecting 5 minutes or longer history duration, the chart is downsampled to 150 data points (LTTB algorithm), so chart accuracy is not guaranteed.
+> **注意**：选择 5 分钟及以上的历史时长时，图表会降采样至 150 个数据点（LTTB 算法），因此不保证图表结果的精确性。
 
-### Thresholds
+### 阈值
 
-Configure when tray text changes color:
+配置托盘文字变色的条件：
 
-- **Warning threshold**: Text turns orange
-- **Critical threshold**: Text turns red
+- **警告阈值**：文字变为橙色
+- **临界阈值**：文字变为红色
 
-| Metric | Warning | Critical |
-|--------|---------|----------|
+| 指标 | 警告 | 临界 |
+|------|------|------|
 | CPU | 70% | 90% |
 | GPU | 70% | 90% |
-| Memory | 80% | 95% |
-| HDD | 80% | 95% |
-| Network | 1 MB/s | 5 MB/s |
+| 内存 | 80% | 95% |
+| 硬盘 | 80% | 95% |
+| 网络 | 1 MB/s | 5 MB/s |
 
-## Screenshots
+## 截图
 
-### Dark Mode
+### 深色模式
 
-![Dark Mode](docs/dark-mode.png)
+![深色模式](docs/dark-mode.png)
 
-### Light Mode
+### 浅色模式
 
-![Light Mode](docs/light-mode.png)
+![浅色模式](docs/light-mode.png)
 
-### History Chart
+### 历史图表
 
-![History Chart](docs/history-chart.png)
+![历史图表](docs/history-chart.png)
 
-## Building from Source
+## 从源码构建
 
-### Requirements
+### 环境要求
 
-- Visual Studio 2022 (or later)
+- Visual Studio 2022（或更高版本）
 - Windows SDK 10.0
-- MFC (Static library)
+- MFC（静态库）
 
-### Build
+### 构建命令
 
 ```bash
-# Clone the repository
+# 克隆仓库
 git clone https://github.com/tiger2005/tray-neo.git
 cd tray-neo
 
-# Build using MSBuild
+# 使用 MSBuild 构建
 build.bat
 ```
 
-The resulting `TrayNeo.dll` will be in `Bin/Release/plugins/` (Win32) or `Bin/x64/Release/plugins/` (x64).
+生成的 `TrayNeo.dll` 将位于 `Bin/Release/plugins/`（Win32）或 `Bin/x64/Release/plugins/`（x64）。
 
-## License
+## 许可证
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE)。
 
-## Acknowledgments
+## 致谢
 
-- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - The monitoring framework
-- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - Design inspiration
-- [Geist UI](https://vercel.com/geist/introduction) - Color scheme
-- [Geist Mono](https://vercel.com/font) - Font used in the plugin
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - 监控框架
+- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - 灵感来源
+- [Geist UI](https://vercel.com/geist/introduction) - 配色方案
+- [Geist Mono](https://vercel.com/font) - 插件使用的字体
