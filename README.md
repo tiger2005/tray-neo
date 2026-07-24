@@ -92,4 +92,6 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) for deta
 ## Acknowledgments
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - The monitoring framework
+- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - Design inspiration
+- [Geist UI](https://vercel.com/geist/introduction) - Color scheme
 - [Geist Mono](https://vercel.com/font) - Font used in the plugin

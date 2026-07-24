@@ -92,4 +92,6 @@ build.bat
 ## 致谢
 
 - [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - 监控框架
+- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - 灵感来源
+- [Geist UI](https://vercel.com/geist/introduction) - 配色方案
 - [Geist Mono](https://vercel.com/font) - 插件使用的字体
