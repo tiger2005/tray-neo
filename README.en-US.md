@@ -27,7 +27,7 @@ A modern TrafficMonitor plugin that displays real-time system metrics in the tas
 
 ## Configuration
 
-Right-click the plugin area and select "Tray Neo Settings":
+Right-click the plugin area and select "Plugin Options" under "Tray Neo":
 
 | Setting | Description | Default |
 |---------|-------------|---------|
