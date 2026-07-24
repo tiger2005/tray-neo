@@ -69,7 +69,7 @@ const wchar_t* CTrayNeo::GetInfo(PluginInfoIndex index)
     case TMI_COPYRIGHT:
         return L"Copyright (C) 2026 tiger2005";
     case TMI_VERSION:
-        return L"0.2.0";
+        return L"0.2.1";
     case ITMPlugin::TMI_URL:
         return L"https://github.com/tiger2005/tray-neo";
     default:

@@ -1156,7 +1156,7 @@ void CHistoryChartWnd::DrawTooltip(Gdiplus::Graphics* graphics, CDC* pDC)
         {
             SolidBrush dotBrush(Color(255, GetRValue(line_colors[i]), GetGValue(line_colors[i]), GetBValue(line_colors[i])));
             REAL dotX = static_cast<REAL>(x + padding);
-            REAL dotY = static_cast<REAL>(textY + lineHeight / 2 - Scale(2));
+            REAL dotY = static_cast<REAL>(textY + lineHeight / 2 - Scale(2) + 1);
             REAL dotW = static_cast<REAL>(Scale(4));
             REAL dotH = static_cast<REAL>(Scale(4));
             graphics->FillEllipse(&dotBrush, dotX, dotY, dotW, dotH);
