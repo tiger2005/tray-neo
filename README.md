@@ -2,98 +2,119 @@
 
 [English](README.en-US.md)
 
-一个现代化的 TrafficMonitor 插件，在任务栏托盘区域显示实时系统指标，并提供交互式历史图表弹窗。
+一个为 [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) 打造的现代化双行任务栏系统监控面板。
 
-![预览](docs/screenshot.png)
+Tray Neo 将 CPU、GPU、内存、硬盘以及网络上下行整合到一个紧凑的任务栏显示项中。平时可以直接查看实时状态；点击面板，即可展开带悬停提示的历史趋势图。
 
-## 特性
+![Tray Neo 预览](docs/screenshot.png)
 
-- **实时监控**：CPU、GPU、内存、硬盘、网络（上传/下载）
-- **交互式历史图表**：鼠标悬停查看特定时间点的精确数值
-- **智能提示框**：三种风格自适应（小型、中型、联动），默认显示在鼠标左侧
-- **Geist UI 配色**：基于 Vercel Geist 设计系统的亮色/暗色主题
-- **渐变边框**：每个图表的圆角边框使用指标特色色，从顶部向下渐变到透明
-- **智能降采样**：历史时长超过 2.5 分钟时，使用 LTTB 算法降采样至 150 个点，保留峰谷特征
-- **可配置阈值**：为每个指标配置警告/临界级别
-- **切换显示**：点击插件区域显示/隐藏历史图表
+## 安装使用
 
-## 安装
+1. 前往 [Releases](https://github.com/tiger2005/tray-neo/releases) 下载与 TrafficMonitor 位数一致的 DLL：
+   - `TrayNeo-x64.dll`：用于 64 位 TrafficMonitor
+   - `TrayNeo-Win32.dll`：用于 32 位 TrafficMonitor
+2. 将下载的 DLL 复制到 TrafficMonitor 的 `plugins` 目录。
+3. 重启 TrafficMonitor。
+4. 右键 TrafficMonitor，进入 **选项 → 插件**，启用 **Tray Neo**。
+5. 在任务栏显示设置中添加 Tray Neo 的显示项目。
 
-1. 从 [Releases](https://github.com/tiger2005/tray-neo/releases) 下载最新版本
-2. 将 `TrayNeo.dll` 解压到 TrafficMonitor 插件目录：
-   - 通常是 `TrafficMonitor\plugins\`
-3. 重启 TrafficMonitor
-4. 在 TrafficMonitor 设置中启用插件
+> Release 中的 `.pdb` 文件是调试符号。普通用户安装时只需要对应的 DLL。
 
-## 配置
+## 插件设置
 
-右键点击插件区域，在“Tray Neo”栏目下选择“插件选项”，即可配置插件设置：
+右键点击 Tray Neo 的任务栏区域，在 **Tray Neo → 插件选项** 中进行设置。
+
+### 常规选项
 
 | 设置项 | 说明 | 默认值 |
 |--------|------|--------|
-| 历史时长 | 保留历史数据的时间长度（30 秒 ~ 1 小时） | 2 分钟 |
-| 任务栏中替换 MAX 为数值 | 达到 100% 时显示实际值而非"MAX" | 关闭 |
-| 图表中联动显示数值 | 悬停任意图表时显示所有指标 | 关闭 |
+| 历史记录时长 | 设置图表保留最近多长时间的数据 | 2 分钟 |
+| 任务栏中将 100% 替换为 MAX | 百分比指标达到 100% 时显示 `MAX`，可缩短任务栏占用宽度 | 关闭 |
+| 图表中联动显示所有数值 | 悬停任意图表时显示同一时间点的全部六项指标 | 关闭 |
 
-> **注意**：选择 5 分钟及以上的历史时长时，图表会降采样至 150 个数据点（LTTB 算法），因此不保证图表结果的精确性。
+可选历史时长：
 
-### 阈值
+`30 秒 / 1 分钟 / 2 分钟 / 5 分钟 / 10 分钟 / 20 分钟 / 30 分钟 / 1 小时`
 
-配置托盘文字变色的条件：
+### 颜色阈值
 
-- **警告阈值**：文字变为橙色
-- **临界阈值**：文字变为红色
+每项指标都可以分别设置警告和严重阈值：
 
-| 指标 | 警告 | 临界 |
-|------|------|------|
+- 达到警告阈值：文字变为橙色
+- 达到严重阈值：文字变为红色
+- 网络阈值的单位为 `MB/s`
+
+| 指标 | 默认警告阈值 | 默认严重阈值 |
+|------|--------------|--------------|
 | CPU | 70% | 90% |
 | GPU | 70% | 90% |
-| 内存 | 80% | 95% |
-| 硬盘 | 80% | 95% |
-| 网络 | 1 MB/s | 5 MB/s |
+| MEM | 80% | 95% |
+| HDD | 80% | 95% |
+| NET↓ | 1 MB/s | 5 MB/s |
+| NET↑ | 1 MB/s | 5 MB/s |
 
-## 截图
+## 历史记录与降采样
+
+Tray Neo 每秒记录一次六项指标，并使用环形缓冲区保存所选时间范围内的数据。
+
+当历史时长不超过 2 分钟时，图表直接绘制逐秒采样点。选择 5 分钟及以上时，插件会使用 LTTB 算法将数据压缩到约 150 个显示点，以降低长曲线的绘制开销，同时尽量保留明显的峰值、谷值和趋势变化。
+
+> 长时间范围下的图表主要用于观察趋势。降采样点是原始数据的代表值，不适合用于逐秒核对或精确流量统计；需要查看短时细节时，建议选择 30 秒、1 分钟或 2 分钟。
+
+## 效果预览
 
 ### 深色模式
 
-![深色模式](docs/dark-mode.png)
+![Tray Neo 深色模式](docs/dark-mode.png)
 
 ### 浅色模式
 
-![浅色模式](docs/light-mode.png)
+![Tray Neo 浅色模式](docs/light-mode.png)
 
-### 历史图表
+### 历史图表联动提示
 
-![历史图表](docs/history-chart.png)
+![Tray Neo 历史图表联动提示](docs/history-chart.png)
 
 ## 从源码构建
 
 ### 环境要求
 
-- Visual Studio 2022（或更高版本）
-- Windows SDK 10.0
-- MFC（静态库）
+- Windows
+- Visual Studio / MSBuild
+- “使用 C++ 的桌面开发”工作负载
+- MFC 静态库组件
+- Windows 10 或更高版本的 Windows SDK
 
-### 构建命令
+当前项目文件使用 `v145` 平台工具集。若本机安装的是其他工具集，请先在项目属性中调整 `Platform Toolset`。
 
-```bash
-# 克隆仓库
+### 一键构建
+
+```bat
 git clone https://github.com/tiger2005/tray-neo.git
 cd tray-neo
-
-# 使用 MSBuild 构建
 build.bat
 ```
 
-生成的 `TrayNeo.dll` 将位于 `Bin/Release/plugins/`（Win32）或 `Bin/x64/Release/plugins/`（x64）。
+`build.bat` 会依次构建 Win32 和 x64 Release 版本，输出位置为：
+
+```text
+Win32: Bin\Release\plugins\TrayNeo.dll
+x64:   Bin\x64\Release\plugins\TrayNeo.dll
+```
+
+创建 GitHub Release 时，工作流会将产物重命名为 `TrayNeo-Win32.dll` 和 `TrayNeo-x64.dll` 后上传。
 
 ## 许可证
 
-本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE)。
+本项目采用 [MIT License](LICENSE)。
+
+Geist Mono 字体使用 SIL Open Font License，详见 [assets/OFL.txt](assets/OFL.txt)。
 
 ## 致谢
 
-- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - 监控框架
-- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - 灵感来源
-- [Geist UI](https://vercel.com/geist/introduction) - 配色方案
-- [Geist Mono](https://vercel.com/font) - 插件使用的字体
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor)：插件接口与系统监控数据
+- [tray-pulsy](https://github.com/feelgooder/tray-pulsy)：界面与图表设计灵感
+- [Geist](https://vercel.com/geist/introduction)：配色与视觉语言
+- [Geist Mono](https://vercel.com/font)：任务栏面板与图表所使用的字体
+
+如果遇到问题或有功能建议，欢迎在项目仓库提交 [Issue](https://github.com/tiger2005/tray-neo/issues)。

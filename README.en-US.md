@@ -2,98 +2,119 @@
 
 [中文说明](README.md)
 
-A modern TrafficMonitor plugin that displays real-time system metrics in the taskbar tray area and provides an interactive history chart popup.
+A modern two-line taskbar system monitor for [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor).
 
-![Preview](docs/screenshot.png)
+Tray Neo combines CPU, GPU, memory, disk, download, and upload activity into one compact taskbar item. Check live values at a glance, then click the panel whenever you need an interactive view of recent trends.
 
-## Features
-
-- **Real-time monitoring**: CPU, GPU, Memory, HDD, Network (upload/download)
-- **Interactive history chart**: Hover to see exact values at specific points in time
-- **Smart tooltip**: Three adaptive styles (small, medium, linked), defaults to the left of the cursor
-- **Geist UI color scheme**: Light/dark themes based on the Vercel Geist design system
-- **Gradient borders**: Each chart's rounded border uses the metric's accent color, fading from top to transparent
-- **Smart downsampling**: When history exceeds 2.5 minutes, uses LTTB algorithm to downsample to 150 points, preserving peaks and valleys
-- **Customizable thresholds**: Configure warning/critical levels for each metric
-- **Toggle display**: Click to show/hide the history chart
+![Tray Neo preview](docs/screenshot.png)
 
 ## Installation
 
-1. Download the latest release from [Releases](https://github.com/tiger2005/tray-neo/releases)
-2. Extract `TrayNeo.dll` to your TrafficMonitor plugins directory:
-   - Usually `TrafficMonitor\plugins\`
-3. Restart TrafficMonitor
-4. Enable the plugin in TrafficMonitor settings
+1. Open [Releases](https://github.com/tiger2005/tray-neo/releases) and download the DLL that matches your TrafficMonitor architecture:
+   - `TrayNeo-x64.dll` for 64-bit TrafficMonitor
+   - `TrayNeo-Win32.dll` for 32-bit TrafficMonitor
+2. Copy the DLL into TrafficMonitor's `plugins` directory.
+3. Restart TrafficMonitor.
+4. Right-click TrafficMonitor, open **Options → Plugins**, and enable **Tray Neo**.
+5. Add the Tray Neo item in the taskbar display settings.
 
-## Configuration
+> The `.pdb` files attached to a release are debugging symbols. Regular users only need the matching DLL.
 
-Right-click the plugin area and select "Plugin Options" under "Tray Neo":
+## Plugin Settings
+
+Right-click the Tray Neo taskbar area and open **Tray Neo → Plugin Options**.
+
+### General Options
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| History Duration | How long to keep history data (30 sec ~ 1 hour) | 2 minutes |
-| Replace MAX with value in taskbar | Show actual value instead of "MAX" when at 100% | Off |
-| Linked tooltip in chart | Show all metrics when hovering any chart | Off |
+| History duration | Controls how much recent data is kept for the charts | 2 minutes |
+| Replace 100% with MAX in taskbar | Displays `MAX` when a percentage metric reaches 100%, reducing the required panel width | Off |
+| Show all metrics linked in chart | Shows all six metrics for the same point when any chart is hovered | Off |
 
-> **Note**: When selecting 5 minutes or longer history duration, the chart is downsampled to 150 data points (LTTB algorithm), so chart accuracy is not guaranteed.
+Available history ranges:
 
-### Thresholds
+`30 seconds / 1 minute / 2 minutes / 5 minutes / 10 minutes / 20 minutes / 30 minutes / 1 hour`
 
-Configure when tray text changes color:
+### Color Thresholds
 
-- **Warning threshold**: Text turns orange
-- **Critical threshold**: Text turns red
+Warning and critical thresholds can be configured independently for every metric:
 
-| Metric | Warning | Critical |
-|--------|---------|----------|
+- At the warning threshold, the taskbar value turns orange
+- At the critical threshold, the taskbar value turns red
+- Network thresholds are entered in `MB/s`
+
+| Metric | Default warning | Default critical |
+|--------|-----------------|------------------|
 | CPU | 70% | 90% |
 | GPU | 70% | 90% |
-| Memory | 80% | 95% |
+| MEM | 80% | 95% |
 | HDD | 80% | 95% |
-| Network | 1 MB/s | 5 MB/s |
+| NET↓ | 1 MB/s | 5 MB/s |
+| NET↑ | 1 MB/s | 5 MB/s |
+
+## History and Downsampling
+
+Tray Neo records all six metrics once per second and keeps them in ring buffers sized for the selected history range.
+
+For ranges up to 2 minutes, the charts draw the per-second samples directly. At 5 minutes or longer, the plugin applies LTTB downsampling and limits the display to roughly 150 representative points. This reduces the cost of drawing long curves while preserving prominent peaks, valleys, and changes in shape as much as possible.
+
+> Long-range charts are intended for trend inspection. Downsampled points represent the original samples and should not be used for second-by-second verification or precise traffic accounting. Choose 30 seconds, 1 minute, or 2 minutes when fine-grained detail matters.
 
 ## Screenshots
 
 ### Dark Mode
 
-![Dark Mode](docs/dark-mode.png)
+![Tray Neo dark mode](docs/dark-mode.png)
 
 ### Light Mode
 
-![Light Mode](docs/light-mode.png)
+![Tray Neo light mode](docs/light-mode.png)
 
-### History Chart
+### Linked History Tooltip
 
-![History Chart](docs/history-chart.png)
+![Tray Neo linked history tooltip](docs/history-chart.png)
 
 ## Building from Source
 
 ### Requirements
 
-- Visual Studio 2022 (or later)
-- Windows SDK 10.0
-- MFC (Static library)
+- Windows
+- Visual Studio / MSBuild
+- The **Desktop development with C++** workload
+- MFC static library components
+- Windows 10 SDK or later
 
-### Build
+The current project file targets the `v145` platform toolset. If your installation provides a different toolset, update **Platform Toolset** in the project properties before building.
 
-```bash
-# Clone the repository
+### One-command Build
+
+```bat
 git clone https://github.com/tiger2005/tray-neo.git
 cd tray-neo
-
-# Build using MSBuild
 build.bat
 ```
 
-The resulting `TrayNeo.dll` will be in `Bin/Release/plugins/` (Win32) or `Bin/x64/Release/plugins/` (x64).
+`build.bat` builds both Win32 and x64 Release configurations. The output files are placed at:
+
+```text
+Win32: Bin\Release\plugins\TrayNeo.dll
+x64:   Bin\x64\Release\plugins\TrayNeo.dll
+```
+
+When a GitHub Release is created, the workflow renames these artifacts to `TrayNeo-Win32.dll` and `TrayNeo-x64.dll` before uploading them.
 
 ## License
 
-This project is licensed under the MIT License - see [LICENSE](LICENSE) for details.
+Tray Neo is released under the [MIT License](LICENSE).
+
+Geist Mono is distributed under the SIL Open Font License; see [assets/OFL.txt](assets/OFL.txt).
 
 ## Acknowledgments
 
-- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) - The monitoring framework
-- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) - Design inspiration
-- [Geist UI](https://vercel.com/geist/introduction) - Color scheme
-- [Geist Mono](https://vercel.com/font) - Font used in the plugin
+- [TrafficMonitor](https://github.com/zhongyang219/TrafficMonitor) for the plugin API and monitoring data
+- [tray-pulsy](https://github.com/feelgooder/tray-pulsy) for interface and chart inspiration
+- [Geist](https://vercel.com/geist/introduction) for the color and visual language
+- [Geist Mono](https://vercel.com/font) for the typeface used by the panel and charts
+
+Bug reports and feature suggestions are welcome in [Issues](https://github.com/tiger2005/tray-neo/issues).
